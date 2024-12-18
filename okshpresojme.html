@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Llogaritja e Tatimit mbi Qeranë</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #0056b3;
+        }
+        nav a {
+            color: white;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav a:hover {
+            background-color: #003d82;
+        }
+        .content {
+            display: none;
+            padding: 20px;
+        }
+        .active {
+            display: block;
+        }
+        h1, h3 {
+            text-align: center;
+            color: #0056b3;
+        }
+        form, table {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #0056b3;
+            color: white;
+        }
+        label, input, select, button {
+            width: 100%;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #003d82;
+        }
+        #output {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="#" onclick="showContent('formula')">Formula</a>
+        <a href="#" onclick="showContent('tabela')">Tabela</a>
+    </nav>
+
+    <!-- Faqja 1: Formula -->
+    <div id="formula" class="content active">
+        <h1>Llogaritja e Tatimit mbi Qeranë</h1>
+        <form onsubmit="calculate(event)">
+            <label for="city">Qyteti:</label>
+            <select id="city" required></select>
+
+            <label for="propertyType">Lloji i Pronës:</label>
+            <select id="propertyType" required>
+                <option value="Apartamente">Apartamente</option>
+                <option value="Dyqane">Dyqane</option>
+            </select>
+
+            <label for="area">Sipërfaqja në m²:</label>
+            <input type="number" id="area" placeholder="Shkruaj sipërfaqen" required>
+
+            <label for="contractPrice">Çmimi i Kontratës për m² (Lek):</label>
+            <input type="number" id="contractPrice" placeholder="Shkruaj çmimin e kontratës" required>
+
+            <button type="submit">Llogarit</button>
+        </form>
+        <div id="output"></div>
+    </div>
+
+    <!-- Faqja 2: Tabela -->
+    <div id="tabela" class="content">
+        <h3>Tabela e Referencave për Qytetet</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Qyteti</th>
+                    <th>Apartamente (Lek/m²)</th>
+                    <th>Dyqane (Lek/m²)</th>
+                </tr>
+            </thead>
+            <tbody id="referenceTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const referenceData = {
+            "Tiranë": {"Apartamente": 30.0, "Dyqane": 50.0},
+            "Bajram Curri": {"Apartamente": 12.2355, "Dyqane": 18.35325},
+            "Ballsh": {"Apartamente": 13.545, "Dyqane": 20.317499999999992},
+            "Belesh": {"Apartamente": 15.75},
+            "Berat": {"Apartamente": 18.985500000000002, "Dyqane": 28.47825},
+            "Bilisht": {"Apartamente": 15.75, "Dyqane": 23.625},
+            "Bulqizë": {"Apartamente": 19.340999999999998, "Dyqane": 29.011499999999998},
+            "Burrel": {"Apartamente": 19.880999999999997, "Dyqane": 29.821499999999993},
+            "Cërrik": {"Apartamente": 17.235, "Dyqane": 25.8525},
+            "Delvinë": {"Apartamente": 12.0375, "Dyqane": 18.05625},
+            "Divjakë": {"Apartamente": 20.25, "Dyqane": 30.374999999999993},
+            "Durrës": {"Apartamente": 31.541849999999997, "Dyqane": 47.312774999999995},
+            "Elbasan": {"Apartamente": 22.680000000000003, "Dyqane": 34.019999999999996},
+            "Ersekë": {"Apartamente": 10.440000000000001, "Dyqane": 15.659999999999998},
+            "Fier": {"Apartamente": 23.939999999999998, "Dyqane": 35.90999999999999},
+            "Fushë-Arrëz": {"Apartamente": 3.375, "Dyqane": 5.0625},
+            "Fushë-Krujë": {"Apartamente": 22.95, "Dyqane": 34.425},
+            "Gjirokastër": {"Apartamente": 22.311, "Dyqane": 33.466499999999996},
+            "Gramsh": {"Apartamente": 19.36035, "Dyqane": 29.040525},
+            "Himarë": {"Apartamente": 24.3, "Dyqane": 36.449999999999996},
+            "KLOS": {"Apartamente": 14.399999999999999},
+            "Kamëz": {"Apartamente": 23.264999999999997, "Dyqane": 34.897499999999994},
+            "Kavajë": {"Apartamente": 26.293499999999998, "Dyqane": 39.44025},
+            "Konispol": {"Apartamente": 12.6, "Dyqane": 18.9},
+            "Koplik": {"Apartamente": 18.224999999999998, "Dyqane": 27.3375},
+            "Korçë": {"Apartamente": 21.15, "Dyqane": 31.724999999999994},
+            "Krujë": {"Apartamente": 21.825, "Dyqane": 32.7375},
+            "Krume": {"Apartamente": 11.025, "Dyqane": 16.537499999999998},
+            "Kukës": {"Apartamente": 24.165, "Dyqane": 36.247499999999995},
+            "Kuçovë": {"Apartamente": 18.135, "Dyqane": 27.202500000000004},
+            "Këlcyrë": {"Apartamente": 11.069999999999999, "Dyqane": 19.169999999999998},
+            "Laç": {"Apartamente": 19.125, "Dyqane": 28.687499999999996},
+            "Leskovik": {"Apartamente": 9.45, "Dyqane": 14.174999999999997},
+            "Lezhë": {"Apartamente": 25.2, "Dyqane": 37.8},
+            "Libohove": {"Apartamente": 12.78},
+            "Librazhd": {"Apartamente": 19.809, "Dyqane": 29.713499999999996},
+            "Lushnjë": {"Apartamente": 17.325, "Dyqane": 25.9875},
+            "Maliq": {"Apartamente": 12.51, "Dyqane": 18.764999999999997},
+            "Mamurras": {"Apartamente": 13.95, "Dyqane": 20.925},
+            "Memaliaj": {"Apartamente": 6.255, "Dyqane": 9.382499999999999},
+            "Orikum": {"Apartamente": 27.9, "Dyqane": 41.85},
+            "Patos": {"Apartamente": 12.6, "Dyqane": 18.9},
+            "Peqin": {"Apartamente": 17.581500000000002, "Dyqane": 26.372249999999998},
+            "Peshkopi": {"Apartamente": 21.879, "Dyqane": 21.599999999999998},
+            "Pogradec": {"Apartamente": 22.5, "Dyqane": 33.74999999999999},
+            "Poliçan": {"Apartamente": 11.475, "Dyqane": 17.2125},
+            "Pukë": {"Apartamente": 9.9, "Dyqane": 14.849999999999998},
+            "Përmet": {"Apartamente": 14.669999999999998, "Dyqane": 22.005},
+            "Përrenjas": {"Apartamente": 18.801, "Dyqane": 23.625},
+            "Roskovec": {"Apartamente": 13.5, "Dyqane": 20.25},
+            "Rrogozhinë": {"Apartamente": 18.45, "Dyqane": 27.675},
+            "Rrëshen": {"Apartamente": 22.529999999999998, "Dyqane": 19.912499999999998},
+            "Rubik": {"Apartamente": 13.275},
+            "Sarandë": {"Apartamente": 22.851, "Dyqane": 34.2765},
+            "Selenicë": {"Apartamente": 11.475, "Dyqane": 17.2125},
+            "Shijak": {"Apartamente": 19.2285, "Dyqane": 28.84275},
+            "Shkodër": {"Apartamente": 25.875, "Dyqane": 38.8125},
+            "Sukth": {"Apartamente": 18.675, "Dyqane": 28.0125},
+            "Tepelenë": {"Apartamente": 12.78, "Dyqane": 19.169999999999998},
+            "Ura Vajgurore": {"Apartamente": 16.785, "Dyqane": 25.1775},
+            "Vau Dejës": {"Apartamente": 10.935, "Dyqane": 16.4025},
+            "Vlorë": {"Apartamente": 27.74925, "Dyqane": 41.623875},
+            "Vorë": {"Apartamente": 23.175, "Dyqane": 34.762499999999996},
+            "Çorovodë": {"Apartamente": 10.26, "Dyqane": 15.389999999999999},
+            "DummyCity": {"DummyProperty": 127}
+        };
+
+        // Mbush dropdown-in dhe tabelën
+        const citySelect = document.getElementById('city');
+        const tableBody = document.getElementById('referenceTable');
+
+        for (const city in referenceData) {
+            citySelect.innerHTML += `<option value="${city}">${city}</option>`;
+            tableBody.innerHTML += `
+                <tr>
+                    <td>${city}</td>
+                    <td>${referenceData[city]["Apartamente"] || "N/A"}</td>
+                    <td>${referenceData[city]["Dyqane"] || "N/A"}</td>
+                </tr>
+            `;
+        }
+
+        // Funksioni për llogaritjen
+        function calculate(event) {
+            event.preventDefault();
+            const city = document.getElementById('city').value;
+            const propertyType = document.getElementById('propertyType').value;
+            const area = parseFloat(document.getElementById('area').value);
+            const contractPrice = parseFloat(document.getElementById('contractPrice').value);
+            const referencePrice = referenceData[city]?.[propertyType];
+
+            if (!referencePrice) {
+                document.getElementById('output').innerHTML = "<strong>Te dhenat nuk jane te plota per kete qytet/pronë!</strong>";
+                return;
+            }
+
+            const taxableValue = Math.max(referencePrice, contractPrice) * area * 0.1;
+            document.getElementById('output').innerHTML = `
+                <strong>Tatimi për qiranë është: ${taxableValue.toFixed(2)} Lek</strong>
+            `;
+        }
+
+        // Navigimi midis tabave
+        function showContent(contentId) {
+            document.querySelectorAll('.content').forEach(div => div.classList.remove('active'));
+            document.getElementById(contentId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
